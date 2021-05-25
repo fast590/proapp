@@ -1,0 +1,45 @@
+.header {
+    width: 80%;
+    margin: auto;
+    display: flex;
+}
+
+.logo {
+    width: 40%;
+}
+
+.logo a {
+    text-decoration: none !important;
+}
+
+.menu {
+    width: 50%;
+    display: flex;
+    padding-top: 15px;
+}
+
+.menu li {
+    list-style: none;
+    color: black;
+    width: 95px;
+    font-size: 20px;
+    text-transform: uppercase;
+}
+
+.menu li a {
+    text-decoration: none !important;
+}
+
+.icon {
+    display: flex;
+    padding-top: 20px;
+}
+
+.icon li {
+    list-style: none;
+    width: 45px;
+}
+
+.hiden {
+    display: none;
+}
