@@ -1,5 +1,8 @@
 const router = require('express').Router()
-const cloudinary = require('cloudinary')
+const cloudinary = require('cloudinary').v2
+const fs = require('fs')
+const auth = require('../middleware/auth')
+const authAdmin = require('../middleware/adminAuth')
 
 cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
@@ -7,17 +10,51 @@ cloudinary.config({
     api_secret: process.env.CLOUD_API_SECRET
 })
 
-
-router.post('/upload', (req, res) => {
+router.post('/upload', auth, authAdmin, (req, res) => {
     try {
-        console.log(req.files)
         if(!req.files || Object.keys(req.files).length ===0)
-            res.json({msg:"File Upload"})
+            return res.status(400).json({msg: "No files were uploaded."})
+
+        const file = req.files.file
+    
+        if(file.size > 1024*1024) {
+            removeTmp(file.tempFilePath)
+            return res.status(400).json({msg: "Image size is too large."})
+        }
+    
+        if(file.mimetype !== 'image/jpeg' && file.mimetype !== 'image/png' && file.mimetype !== 'image/jpg'){
+            removeTmp(file.tempFilePath)
+            return res.status(400).json({msg: "File format is incorrect."})
+        }
+
+        cloudinary.uploader.upload(file.tempFilePath, {folder: "Image"}, (err, result) => {
+            if(err) throw err
+
+            removeTmp(file.tempFilePath)
+            res.json({public_id: result.public_id, url: result.url})
+        })
     } catch (err) {
         return res.status(400).json({msg: err.message})
     }
 })
 
+router.post('/destroy', auth, authAdmin, (req, res) => {
+    try {
+        const {public_id} = req.body
+        cloudinary.uploader.destroy(public_id, (err, result) => {
+            if(err) throw err
+
+            res.json({msg: "Deleted Images"})
+        })
+    } catch (err) {
+        return res.status(500).json({msg: err.message})
+    }
+})
+
+const removeTmp = (path) => {
+    fs.unlink(path, err=> {
+        if(err) throw err
+    })
+}
 
 module.exports = router
-
